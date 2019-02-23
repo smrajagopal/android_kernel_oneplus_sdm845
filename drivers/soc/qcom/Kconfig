@@ -786,6 +786,14 @@ config QMP_DEBUGFS_CLIENT
 	  This options enables a driver which allows clients to send messages
 	  to Alway On processor using QMP transport.
 
+config QCOM_TZ_LOGGER
+	depends on QCOM_SCM
+	depends on TZ_LOGGER
+	tristate "Qualcomm TEE logger"
+	help
+		Trustzone logger for Qualcom devices.
+		If unsure, say N.
+
 source "drivers/soc/qcom/memshare/Kconfig"
 
 config MSM_REMOTEQDSS

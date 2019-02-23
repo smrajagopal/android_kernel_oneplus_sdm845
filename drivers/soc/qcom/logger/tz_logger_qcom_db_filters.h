@@ -1,0 +1,163 @@
+#ifndef TZ_LOGGER_QCOM_DB_FILTERS_H
+#define TZ_LOGGER_QCOM_DB_FILTERS_H
+
+struct tzlog_ctx_any;
+
+bool tz_filter__is_not_scm_armv8(struct tzlog_ctx_any *ctx);
+bool tz_filter_skip(struct tzlog_ctx_any *ctx);
+
+#define tz_filter$L1C_SERVICE_ID NULL
+#define tz_filter$L1C_BUFFER_SET_COMMAND_ID NULL
+#define tz_filter$CACHE_BUFFER_DUMP_COMMAND_ID NULL
+#define tz_filter$L1C_BUFFER_GET_SIZE_COMMAND_ID NULL
+#define tz_filter$L2C_BUFFER_SET_COMMAND_ID NULL
+#define tz_filter$L2C_BUFFER_GET_SIZE_COMMAND_ID NULL
+#define tz_filter$SPDM_SCM_SVC_ID NULL
+#define tz_filter$SPDM_SCM_CMD_ID NULL
+#define tz_filter$OCMEM_SVC_ID NULL
+#define tz_filter$OCMEM_LOCK_CMD_ID NULL
+#define tz_filter$OCMEM_UNLOCK_CMD_ID NULL
+#define tz_filter$OCMEM_ENABLE_DUMP_CMD_ID NULL
+#define tz_filter$OCMEM_DISABLE_DUMP_CMD_ID NULL
+#define tz_filter$SCM_SVC_BOOT NULL
+#define tz_filter$CPU_CONFIG_CMD NULL
+#define tz_filter$CPU_CONFIG_QUERY_CMD NULL
+#define tz_filter$SCM_BOOT_ADDR NULL
+#define tz_filter$SCM_BOOT_ADDR_MC NULL
+#define tz_filter$SCM_DLOAD_CMD NULL
+#define tz_filter$SCM_SVC_SEC_WDOG_DIS NULL
+#define tz_filter$SCM_WDOG_DEBUG_BOOT_PART NULL
+#define tz_filter$THERM_SECURE_BITE_CMD NULL
+#define tz_filter$TZBSP_VIDEO_SET_STATE NULL
+#define tz_filter$SCM_SVC_PIL NULL
+#define tz_filter$MSS_RESTART_ID NULL
+#define tz_filter$PAS_AUTH_AND_RESET_CMD NULL
+#define tz_filter$PAS_INIT_IMAGE_CMD NULL
+#define tz_filter$PAS_MEM_SETUP_CMD NULL
+#define tz_filter$PAS_SHUTDOWN_CMD NULL
+#define tz_filter$SCM_SVC_UTIL NULL
+#define tz_filter$IOMMU_DUMP_SMMU_FAULT_REGS NULL
+#define tz_filter$SCM_Q6_NMI_CMD NULL
+#define tz_filter$SCM_SET_REGSAVE_CMD NULL
+#define tz_filter$SCM_SVC_TZ NULL
+#define tz_filter$SCM_CMD_DEBUG_LAR_UNLOCK NULL
+#define tz_filter$TZ_BLSP_MODIFY_OWNERSHIP_ID NULL
+#define tz_filter$TZ_UPDATE_ID NULL
+#define tz_filter$TZ_RESET_ID NULL
+#define tz_filter$SCM_SVC_INFO NULL
+#define tz_filter$GET_FEAT_VERSION_CMD NULL
+#define tz_filter$SCM_SVC_SSD NULL
+#define tz_filter$SCM_SVC_FUSE NULL
+#define tz_filter$SCM_FUSE_READ NULL
+#define tz_filter$SCM_SVC_PWR NULL
+#define tz_filter$SCM_IO_DISABLE_PMIC_ARBITER NULL
+#define tz_filter$SUPPLY_LM_GET_MIT_CMD NULL
+#define tz_filter$SUPPLY_LM_STEP1_REQ_CMD NULL
+#define tz_filter$SCM_SVC_MP NULL
+#define tz_filter$IOMMU_SECURE_MAP2 NULL
+#define tz_filter$IOMMU_SECURE_MAP2_FLAT NULL
+#define tz_filter$IOMMU_SECURE_PTBL_INIT NULL
+#define tz_filter$IOMMU_SECURE_PTBL_SIZE NULL
+#define tz_filter$IOMMU_SECURE_UNMAP2 NULL
+#define tz_filter$IOMMU_SECURE_UNMAP2_FLAT NULL
+#define tz_filter$IOMMU_SET_CP_POOL_SIZE NULL
+#define tz_filter$MEM_PROTECT_LOCK_ID2 NULL
+#define tz_filter$MEM_PROTECT_LOCK_ID2_FLAT NULL
+#define tz_filter$MEM_PROTECT_SD_CTRL NULL
+#define tz_filter$MSM_OTG_CMD_ID NULL
+#define tz_filter$RESTORE_SEC_CFG NULL
+#define tz_filter$TZBSP_MEM_PROTECT_VIDEO_VAR NULL
+#define tz_filter$XPU_ERR_FATAL NULL
+#define tz_filter$SCM_SVC_ES NULL
+#define tz_filter$SCM_IS_ACTIVATED_ID NULL
+#define tz_filter$SCM_SAVE_PARTITION_HASH_ID NULL
+#define tz_filter$SCM_SVC_HDCP NULL
+#define tz_filter$SCM_CMD_HDCP NULL
+#define tz_filter$SCM_SVC_LMH NULL
+#define tz_filter$LMH_CHANGE_PROFILE NULL
+#define tz_filter$LMH_CTRL_QPMDA NULL
+#define tz_filter$LMH_GET_INTENSITY NULL
+#define tz_filter$LMH_GET_PROFILES NULL
+#define tz_filter$LMH_GET_SENSORS NULL
+#define tz_filter$LMH_TRIM_ERROR NULL
+#define tz_filter$SCM_SVC_TZSCHEDULER NULL
+#define tz_filter$QSEOS_APP_LOOKUP_COMMAND NULL
+#define tz_filter$QSEOS_APP_REGION_NOTIFICATION NULL
+#define tz_filter$QSEOS_APP_SHUTDOWN_COMMAND NULL
+#define tz_filter$QSEOS_APP_START_COMMAND NULL
+#define tz_filter$QSEOS_CLIENT_SEND_DATA_COMMAND NULL
+#define tz_filter$QSEOS_DELETE_KEY NULL
+#define tz_filter$QSEOS_DEREGISTER_LISTENER NULL
+#define tz_filter$QSEOS_GENERATE_KEY NULL
+#define tz_filter$QSEOS_LISTENER_DATA_RSP_COMMAND NULL
+#define tz_filter$QSEOS_LOAD_EXTERNAL_ELF_COMMAND NULL
+#define tz_filter$QSEOS_LOAD_SERV_IMAGE_COMMAND NULL
+#define tz_filter$QSEOS_REGISTER_LISTENER NULL
+#define tz_filter$QSEOS_RPMB_ERASE_COMMAND NULL
+#define tz_filter$QSEOS_RPMB_PROVISION_KEY_COMMAND NULL
+#define tz_filter$QSEOS_SET_KEY NULL
+#define tz_filter$QSEOS_TEE_CLOSE_SESSION NULL
+#define tz_filter$QSEOS_TEE_INVOKE_COMMAND NULL
+#define tz_filter$QSEOS_TEE_OPEN_SESSION NULL
+#define tz_filter$QSEOS_TEE_REQUEST_CANCELLATION NULL
+#define tz_filter$QSEOS_UNLOAD_EXTERNAL_ELF_COMMAND NULL
+#define tz_filter$QSEOS_UNLOAD_SERV_IMAGE_COMMAND NULL
+#define tz_filter$QSEOS_UPDATE_KEY_USERINFO NULL
+#define tz_filter$SCM_SVC_SEC_CAMERA NULL
+#define tz_filter$SHARED_HEAP_SVC_ID NULL
+#define tz_filter$SHARED_HEAP_CMD_ID NULL
+#define tz_filter$TZ_SVC_CRYPTO NULL
+#define tz_filter$PRNG_CMD_ID NULL
+#define tz_filter$TZ_SVC_APP_MGR NULL
+#define tz_filter$START NULL
+#define tz_filter$SHUTDOWN NULL
+#define tz_filter$LOOKUP NULL
+#define tz_filter$STATE NULL
+#define tz_filter$REGION NULL
+#define tz_filter$REGISTER NULL
+#define tz_filter$LOAD_SERVICES_IMAGE NULL
+#define tz_filter$UNLOAD_SERVICES_IMAGE NULL
+#define tz_filter$TZ_SVC_LISTENER NULL
+#define tz_filter$REGISTER2 NULL
+#define tz_filter$DEREGISTER NULL
+#define tz_filter$RESPONSE_HANDLER NULL
+#define tz_filter$TZ_SVC_EXTERNAL NULL
+#define tz_filter$LOAD_EXTERNAL_IMAGE NULL
+#define tz_filter$UNLOAD_EXTERNAL_IMAGE NULL
+#define tz_filter$TZ_SVC_RPMB NULL
+#define tz_filter$PROVISION_KEY NULL
+#define tz_filter$ERASE NULL
+#define tz_filter$TZ_SVC_KEYSTORE NULL
+#define tz_filter$KS_GEN_KEY NULL
+#define tz_filter$DEL_KEY NULL
+#define tz_filter$GET_MAX_KEYS NULL
+#define tz_filter$SET_PIPE_KEY NULL
+#define tz_filter$UPDATE_KEY NULL
+#define tz_filter$TZ_SVC_APP_ID_PLACEHOLDER NULL
+#define tz_filter$GPAPP_OPEN_SESSION NULL
+#define tz_filter$GPAPP_CLOSE_SESSION NULL
+#define tz_filter$GPAPP_INVOKE_COMMAND NULL
+#define tz_filter$GPAPP_REQUEST_CANCELLATION NULL
+#define tz_filter$QSAPP_SEND_DATA NULL
+#define tz_filter$SCM_IO_READ NULL
+#define tz_filter$SCM_IO_WRITE NULL
+
+#define tz_filter$IS_CALL_AVAIL_CMD tz_filter_skip
+#define tz_filter$SMCMOD_CRYPTO_CMD_CIPHER tz_filter__is_not_scm_armv8
+#define tz_filter$SMCMOD_CRYPTO_CMD_MSG_DIGEST_FIXED tz_filter__is_not_scm_armv8
+#define tz_filter$SMCMOD_CRYPTO_CMD_MSG_DIGEST tz_filter__is_not_scm_armv8
+
+#define tz_filter$DWC3_MSM_RESTORE_SCM_CFG_CMD tz_filter__is_not_scm_armv8
+
+#define tz_filter$SCM_CMD_TERMINATE_PC tz_filter_skip
+
+#define tz_filter$SCM_SVC_DCVS tz_filter_skip
+
+#define tz_filter$TZ_INIT_ID tz_filter$SCM_SVC_DCVS
+#define tz_filter$TZ_INIT_ID_64 tz_filter$SCM_SVC_DCVS
+#define tz_filter$TZ_RESET_ID_64 tz_filter$SCM_SVC_DCVS
+#define tz_filter$TZ_UPDATE_ID_64 tz_filter$SCM_SVC_DCVS
+#define tz_filter$TZ_V2_UPDATE_ID_64 tz_filter$SCM_SVC_DCVS
+#define tz_filter$TZ_V2_INIT_ID_64 tz_filter$SCM_SVC_DCVS
+
+#endif

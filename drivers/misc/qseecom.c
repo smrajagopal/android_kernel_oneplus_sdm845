@@ -404,6 +404,9 @@ static int qseecom_scm_call2(uint32_t svc_id, uint32_t tz_cmd_id,
 	qseos_cmd_id = *(uint32_t *)req_buf;
 	scm_resp = (struct qseecom_command_scm_resp *)resp_buf;
 
+	pr_err("XXX %s: svc_id=%#02x tz_cmd_id=%#02x qseos_cmd_id=%#02x\n",
+			 __FUNCTION__, svc_id, tz_cmd_id, qseos_cmd_id);
+
 	switch (svc_id) {
 	case 6: {
 		if (tz_cmd_id == 3) {
@@ -3083,6 +3086,7 @@ int __qseecom_process_reentrancy(struct qseecom_command_scm_resp *resp,
 	}
 }
 
+
 static int __qseecom_send_cmd(struct qseecom_dev_handle *data,
 				struct qseecom_send_cmd_req *req)
 {
@@ -3117,6 +3121,10 @@ static int __qseecom_send_cmd(struct qseecom_dev_handle *data,
 			(char *)data->client.app_name);
 		return -ENOENT;
 	}
+
+	pr_err("XXX __qseecom_send_command start from %s:%i %d<->%d to %s\n",
+			  current->comm, current->pid, req->cmd_req_len, req->resp_len,
+           data->client.app_name);
 
 	if (qseecom.qsee_version < QSEE_VERSION_40) {
 		send_data_req.app_id = data->client.app_id;
@@ -3214,6 +3222,11 @@ exit:
 	ret2 = msm_ion_do_cache_op(qseecom.ion_clnt, data->client.ihandle,
 				data->client.sb_virt, data->client.sb_length,
 				ION_IOC_INV_CACHES);
+
+	pr_err("XXX __qseecom_send_command start from %s:%i %d<->%d to %s\n",
+			  current->comm, current->pid, req->cmd_req_len, req->resp_len,
+           data->client.app_name);
+
 	if (ret2) {
 		pr_err("cache operation failed %d\n", ret2);
 		return ret2;
@@ -3752,6 +3765,9 @@ static int __qseecom_send_modfd_cmd(struct qseecom_dev_handle *data,
 	send_cmd_req.resp_buf = req.resp_buf;
 	send_cmd_req.resp_len = req.resp_len;
 
+   pr_err("XXX NONAPICALL: __qseecom_send_modfd_cmd start from %s:%i to"
+          " %s\n", current->comm, current->pid, data->client.app_name);
+
 	if (__validate_send_cmd_inputs(data, &send_cmd_req))
 		return -EINVAL;
 
@@ -3769,10 +3785,27 @@ static int __qseecom_send_modfd_cmd(struct qseecom_dev_handle *data,
 						(uintptr_t)req.resp_buf);
 
 	if (!is_64bit_addr) {
-		ret = __qseecom_update_cmd_buf(&req, false, data);
+      ret = __qseecom_update_cmd_buf(&req, false, data);
+      for (i = 0; i < MAX_ION_FD; i++) {
+         if (req.ifd_data[i].cmd_buf_offset != 0) {
+            pr_err("XXX __qseecom_send_modfd_cmd from %s:%i to %s, "
+                   "updating address at:%p to:%p\n", current->comm,
+                   current->pid, data->client.app_name,
+                   send_cmd_req.cmd_req_buf + 
+                   req.ifd_data[i].cmd_buf_offset,
+                   *(void **)(req.cmd_req_buf +
+                   req.ifd_data[i].cmd_buf_offset));
+         }
+      }
+
 		if (ret)
 			return ret;
+
 		ret = __qseecom_send_cmd(data, &send_cmd_req);
+      pr_err("XXX __qseecom_send_modfd_cmd from %s:%i %p:%d to %s\n",
+             current->comm, current->pid, req.cmd_req_buf, req.cmd_req_len,
+             data->client.app_name);
+
 		if (ret)
 			return ret;
 		ret = __qseecom_update_cmd_buf(&req, true, data);
@@ -3780,11 +3813,29 @@ static int __qseecom_send_modfd_cmd(struct qseecom_dev_handle *data,
 			return ret;
 	} else {
 		ret = __qseecom_update_cmd_buf_64(&req, false, data);
+		for (i = 0; i < MAX_ION_FD; i++) {
+			if (req.ifd_data[i].cmd_buf_offset != 0) {
+				pr_err("XXX __qseecom_send_modfd_cmd from %s:%i to %s, "
+						 "updating address at:%p to:%p\n", current->comm,
+						 current->pid, data->client.app_name,
+						 send_cmd_req.cmd_req_buf + 
+						 req.ifd_data[i].cmd_buf_offset,
+						 *(void **)(req.cmd_req_buf +
+						 req.ifd_data[i].cmd_buf_offset));
+			}
+		}
+
 		if (ret)
 			return ret;
+
 		ret = __qseecom_send_cmd(data, &send_cmd_req);
+      pr_err("XXX __qseecom_send_modfd_cmd from %s:%i %p:%d to %s\n",
+             current->comm, current->pid, req.cmd_req_buf, req.cmd_req_len,
+             data->client.app_name);
+
 		if (ret)
 			return ret;
+
 		ret = __qseecom_update_cmd_buf_64(&req, true, data);
 		if (ret)
 			return ret;
@@ -4429,6 +4480,9 @@ int qseecom_start_app(struct qseecom_handle **handle,
 	uint32_t fw_size, app_arch;
 	uint32_t app_id = 0;
 
+	pr_err("XXX qseecom_start_app from %s:%i %s\n", current->comm,
+			 current->pid, app_name);
+
 	if (atomic_read(&qseecom.qseecom_state) != QSEECOM_STATE_READY) {
 		pr_err("Not allowed to be called in %d state\n",
 				atomic_read(&qseecom.qseecom_state));
@@ -4660,6 +4714,9 @@ int qseecom_send_command(struct qseecom_handle *handle, void *send_buf,
 		return -EINVAL;
 	}
 	data = handle->dev;
+	pr_err("XXX __qseecom_send_command start from %s:%i %d<->%d to %s\n",
+		 current->comm, current->pid, sbuf_len, rbuf_len,
+		 data->client.app_name);
 
 	req.cmd_req_len = sbuf_len;
 	req.resp_len = rbuf_len;
@@ -4701,6 +4758,12 @@ int qseecom_send_command(struct qseecom_handle *handle, void *send_buf,
 
 	ret = __qseecom_send_cmd(data, &req);
 	data->use_legacy_cmd = false;
+
+
+	pr_err("XXX __qseecom_send_command end from %s:%i %d<->%d to %s\n",
+		 current->comm, current->pid, sbuf_len, rbuf_len,
+		 data->client.app_name);
+
 	if (qseecom.support_bus_scaling)
 		__qseecom_add_bw_scale_down_timer(
 			QSEECOM_SEND_CMD_CRYPTO_TIMEOUT);
@@ -6940,6 +7003,67 @@ static void __qseecom_clean_data_sglistinfo(struct qseecom_dev_handle *data)
 	}
 }
 
+char* cmd_to_string(unsigned cmd){
+	switch (cmd) {
+		case QSEECOM_IOCTL_UNLOAD_APP_REQ:
+			return "QSEECOM_IOCTL_UNLOAD_APP_REQ";
+		case QSEECOM_IOCTL_CREATE_KEY_REQ:
+			return "QSEECOM_IOCTL_CREATE_KEY_REQ";
+		case QSEECOM_IOCTL_UNLOAD_EXTERNAL_ELF_REQ:
+			return "QSEECOM_IOCTL_UNLOAD_EXTERNAL_ELF_REQ";
+		case QSEECOM_IOCTL_GET_QSEOS_VERSION_REQ:
+			return "QSEECOM_IOCTL_GET_QSEOS_VERSION_REQ";
+		case QSEECOM_IOCTL_RECEIVE_REQ:
+			return "QSEECOM_IOCTL_RECEIVE_REQ";
+		case QSEECOM_IOCTL_UPDATE_KEY_USER_INFO_REQ:
+			return "QSEECOM_IOCTL_UPDATE_KEY_USER_INFO_REQ";
+		case QSEECOM_IOCTL_SEND_CMD_REQ:
+			return "QSEECOM_IOCTL_SEND_CMD_REQ";
+		case QSEECOM_IOCTL_SEND_RESP_REQ:
+			return "QSEECOM_IOCTL_SEND_RESP_REQ";
+		case QSEECOM_IOCTL_WIPE_KEY_REQ:
+			return "QSEECOM_IOCTL_WIPE_KEY_REQ";
+		case QSEECOM_IOCTL_LOAD_EXTERNAL_ELF_REQ:
+			return "QSEECOM_IOCTL_LOAD_EXTERNAL_ELF_REQ";
+		case QSEECOM_IOCTL_PERF_ENABLE_REQ:
+			return "QSEECOM_IOCTL_PERF_ENABLE_REQ";
+		case QSEECOM_IOCTL_REGISTER_LISTENER_REQ:
+			return "QSEECOM_IOCTL_REGISTER_LISTENER_REQ";
+		case QSEECOM_IOCTL_SET_MEM_PARAM_REQ:
+			return "QSEECOM_IOCTL_SET_MEM_PARAM_REQ";
+		case QSEECOM_IOCTL_SEND_MODFD_RESP:
+			return "QSEECOM_IOCTL_SEND_MODFD_RESP";
+		case QSEECOM_IOCTL_PERF_DISABLE_REQ:
+			return "QSEECOM_IOCTL_PERF_DISABLE_REQ";
+		case QSEECOM_QTEEC_IOCTL_REQUEST_CANCELLATION_REQ:
+			return "QSEECOM_QTEEC_IOCTL_REQUEST_CANCELLATION_REQ";
+		case QSEECOM_IOCTL_SAVE_PARTITION_HASH_REQ:
+			return "QSEECOM_IOCTL_SAVE_PARTITION_HASH_REQ";
+		case QSEECOM_QTEEC_IOCTL_CLOSE_SESSION_REQ:
+			return "QSEECOM_QTEEC_IOCTL_CLOSE_SESSION_REQ";
+		case QSEECOM_IOCTL_LOAD_APP_REQ:
+			return "QSEECOM_IOCTL_LOAD_APP_REQ";
+		case QSEECOM_IOCTL_SEND_CMD_SERVICE_REQ:
+			return "QSEECOM_IOCTL_SEND_CMD_SERVICE_REQ";
+		case QSEECOM_IOCTL_APP_LOADED_QUERY_REQ:
+			return "QSEECOM_IOCTL_APP_LOADED_QUERY_REQ";
+		case QSEECOM_IOCTL_IS_ES_ACTIVATED_REQ:
+			return "QSEECOM_IOCTL_IS_ES_ACTIVATED_REQ";
+		case QSEECOM_QTEEC_IOCTL_OPEN_SESSION_REQ:
+			return "QSEECOM_QTEEC_IOCTL_OPEN_SESSION_REQ";
+		case QSEECOM_IOCTL_UNREGISTER_LISTENER_REQ:
+			return "QSEECOM_IOCTL_UNREGISTER_LISTENER_REQ";
+		case QSEECOM_IOCTL_SET_BUS_SCALING_REQ:
+			return "QSEECOM_IOCTL_SET_BUS_SCALING_REQ";
+		case QSEECOM_IOCTL_SEND_MODFD_CMD_REQ:
+			return "QSEECOM_IOCTL_SEND_MODFD_CMD_REQ";
+		case QSEECOM_QTEEC_IOCTL_INVOKE_MODFD_CMD_REQ:
+			return "QSEECOM_QTEEC_IOCTL_INVOKE_MODFD_CMD_REQ";
+		default:
+			return "QSEECOM_IOCTL_UNKNOWN_CMD";
+	}
+}
+
 static inline long qseecom_ioctl(struct file *file,
 			unsigned int cmd, unsigned long arg)
 {
@@ -6947,6 +7071,9 @@ static inline long qseecom_ioctl(struct file *file,
 	struct qseecom_dev_handle *data = file->private_data;
 	void __user *argp = (void __user *) arg;
 	bool perf_enabled = false;
+
+	pr_err("XXX qseecom_ioctl from %s:%i CMD: %s %d %lx\n",
+			current->comm, current->pid, cmd_to_string(cmd), cmd, arg);
 
 	if (!data) {
 		pr_err("Invalid/uninitialized device handle\n");

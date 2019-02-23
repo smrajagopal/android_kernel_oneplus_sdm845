@@ -24,6 +24,9 @@
 
 #include <soc/qcom/scm.h>
 
+#include <soc/qcom/qseecomi.h>
+#include <misc/tz_logger.h>
+
 #define CREATE_TRACE_POINTS
 #include <trace/events/scm.h>
 
@@ -137,6 +140,106 @@ struct scm_response {
 #define R6_STR "r6"
 
 #endif
+
+static char * id2_to_string
+(
+	u32 cmd
+) {
+	switch (cmd) {
+		case TZ_INFO_IS_SVC_AVAILABLE_ID:
+			return "TZ_INFO_IS_SVC_AVAILABLE_ID";
+		case TZ_INFO_GET_FEATURE_VERSION_ID:
+			return "TZ_INFO_GET_FEATURE_VERSION_ID";
+		case TZ_ES_SAVE_PARTITION_HASH_ID:
+			return "TZ_ES_SAVE_PARTITION_HASH_ID";
+		case TZ_OS_APP_START_ID:
+			return "TZ_OS_APP_START_ID";
+		case TZ_OS_APP_SHUTDOWN_ID:
+			return "TZ_OS_APP_SHUTDOWN_ID";
+		case TZ_OS_APP_LOOKUP_ID:
+			return "TZ_OS_APP_LOOKUP_ID";
+		case TZ_OS_APP_REGION_NOTIFICATION_ID:
+			return "TZ_OS_APP_REGION_NOTIFICATION_ID";
+		case TZ_OS_LOAD_SERVICES_IMAGE_ID:
+			return "TZ_OS_LOAD_SERVICES_IMAGE_ID";
+		case TZ_OS_UNLOAD_SERVICES_IMAGE_ID:
+			return "TZ_OS_UNLOAD_SERVICES_IMAGE_ID";
+		case TZ_OS_REGISTER_LISTENER_ID:
+			return "TZ_OS_REGISTER_LISTENER_ID";
+		case TZ_OS_DEREGISTER_LISTENER_ID:
+			return "TZ_OS_DEREGISTER_LISTENER_ID";
+		case TZ_OS_LISTENER_RESPONSE_HANDLER_ID:
+			return "TZ_OS_LISTENER_RESPONSE_HANDLER_ID";
+		case TZ_OS_LOAD_EXTERNAL_IMAGE_ID:
+			return "TZ_OS_LOAD_EXTERNAL_IMAGE_ID";
+		case TZ_OS_UNLOAD_EXTERNAL_IMAGE_ID:
+			return "TZ_OS_UNLOAD_EXTERNAL_IMAGE_ID";
+		case TZ_APP_QSAPP_SEND_DATA_ID:
+			return "TZ_APP_QSAPP_SEND_DATA_ID";
+		case TZ_OS_RPMB_PROVISION_KEY_ID:
+			return "TZ_OS_RPMB_PROVISION_KEY_ID";
+		case TZ_OS_RPMB_ERASE_ID:
+			return "TZ_OS_RPMB_ERASE_ID";
+		case TZ_OS_KS_GEN_KEY_ID:
+			return "TZ_OS_KS_GEN_KEY_ID";
+		case TZ_OS_KS_DEL_KEY_ID:
+			return "TZ_OS_KS_DEL_KEY_ID";
+		case TZ_OS_KS_SET_PIPE_KEY_ID:
+			return "TZ_OS_KS_SET_PIPE_KEY_ID";
+		case TZ_OS_KS_UPDATE_KEY_ID:
+			return "TZ_OS_KS_UPDATE_KEY_ID";
+		case TZ_APP_GPAPP_OPEN_SESSION_ID:
+			return "TZ_APP_GPAPP_OPEN_SESSION_ID";
+		case TZ_APP_GPAPP_INVOKE_COMMAND_ID:
+			return "TZ_APP_GPAPP_INVOKE_COMMAND_ID";
+		case TZ_APP_GPAPP_CLOSE_SESSION_ID:
+			return "TZ_APP_GPAPP_CLOSE_SESSION_ID";
+		case TZ_APP_GPAPP_REQUEST_CANCELLATION_ID:
+			return "TZ_APP_GPAPP_REQUEST_CANCELLATION_ID";
+		default:
+			return "UNKNOWN_TZ_ID";
+	}
+}
+
+static char* id_to_string
+(
+	u32 id
+) {
+	switch (id) {
+		case SCM_SVC_PIL:
+			return "SCM_SVC_PIL";
+		case SCM_SVC_UTIL:
+			return "SCM_SVC_UTIL";
+		case SCM_SVC_TZ:
+			return "SCM_SVC_TZ";
+		case SCM_SVC_IO:
+			return "SCM_SVC_IO";
+		case SCM_SVC_INFO:
+			return "SCM_SVC_INFO";
+		case SCM_SVC_FUSE:
+			return "SCM_SVC_FUSE";
+		case SCM_SVC_PWR:
+			return "SCM_SVC_PWR";
+		case SCM_SVC_MP:
+			return "SCM_SVC_MP";
+		case SCM_SVC_ES:
+			return "SCM_SVC_ES";
+		case SCM_SVC_HDCP:
+			return "SCM_SVC_HDCP";
+		case SCM_SVC_LMH:
+			return "SCM_SVC_LMH";
+		case SCM_SVC_TZSCHEDULER:
+			return "SCM_SVC_TZSCHEDULER";
+		case SCM_FUSE_READ: //SCM_SVC_SSD
+			return "SCM_SVC_SSD|SCM_FUSE_READ";
+		case SCM_CMD_HDCP: //SCM_SVC_BOOT
+			return "SCM_CMD_HDCP|SCM_SVC_BOOT";
+		case SCM_SVC_SEC_CAMERA: //SCM_SVC_DCVS
+			return "SCM_SVC_SEC_CAMERA|SCM_SVC_DCVS";
+		default:
+			return "UNKNOWN_SCM_ID";
+	}
+}
 
 /**
  * scm_command_to_response() - Get a pointer to a scm_response
@@ -371,8 +474,10 @@ int scm_call_noalloc(u32 svc_id, u32 cmd_id, const void *cmd_buf,
 
 	memset(scm_buf, 0, scm_buf_len);
 
+	tzlogger_call(0); //TODO
 	ret = scm_call_common(svc_id, cmd_id, cmd_buf, cmd_len, resp_buf,
 				resp_len, scm_buf, len);
+	tzlogger_call(0, ret); //TODO
 	return ret;
 
 }
@@ -635,6 +740,65 @@ static int allocate_extra_arg_buffer(struct scm_desc *desc, gfp_t flags)
 	return 0;
 }
 
+void dbg_scm_dump_memory
+(
+	char * tag,
+	void * start,
+	unsigned int count
+) {
+	unsigned int i = 0;
+	uint64_t * bvstart = (u64*) phys_to_virt((u64)start);
+
+	pr_err("%s %llx -> %llx %d\n", tag, (u64)start, (u64)bvstart, count);
+	while (i < count) {
+		pr_err("%s %04d: %016llx\n", tag, i, bvstart[i]);
+		++i;
+	}
+}
+
+void dbg_scm_log
+(
+	char prefix,
+	u32 fn_id,
+	struct scm_desc *desc
+) {
+	char * tag;
+
+	/* <3>[   34.467695] > XXX1 scm_call2 from fingerprintd:604:3071
+	   ID:TZ_APP_QSAPP_SEND_DATA_ID ARGINFO:2181 4 1983959040 64
+		1983959552 64
+	*/
+
+	if (strncmp("kworker", current->comm, strlen("kworker")) == 0){
+		tag = "XXX2";
+	}else{
+		tag = "XXX1";
+	}
+
+	pr_err("%c %s scm_call2 from %s:%i:%i ID:%s ARGINFO:%d %llu %llu "
+			 "%llu %llu %llu\n", prefix, tag, current->comm, current->tgid,
+			 current->pid, id2_to_string(fn_id), desc->arginfo,
+			 desc->args[0], desc->args[1], desc->args[2], desc->args[3],
+			 desc->args[4]);
+
+	if (strncmp("fingerprintd",
+				    current->comm,
+					 strlen("fingerprintd")) == 0) {
+		if (desc->args[0] == 4) {
+			if (prefix == '>') {
+				dbg_scm_dump_memory(tag,
+						          (void*)desc->args[1],
+									 ((desc->args[2] - 1) / 8) + 1);
+			}
+			else if (prefix == '<') {
+				dbg_scm_dump_memory(tag,
+									 (void*)desc->args[3],
+									 ((desc->args[4] - 1) / 8) + 1);
+			}
+		}
+	}
+}
+
 static int __scm_call2(u32 fn_id, struct scm_desc *desc, bool retry)
 {
 	int arglen = desc->arginfo & 0xf;
@@ -649,6 +813,11 @@ static int __scm_call2(u32 fn_id, struct scm_desc *desc, bool retry)
 		return ret;
 
 	x0 = fn_id | scm_version_mask;
+
+	/* Log the Secure Monitor Call request */
+	//dbg_scm_log('>', fn_id, desc);
+	tzlogger_call(0, x0, desc);
+
 	do {
 		mutex_lock(&scm_lock);
 
@@ -686,10 +855,16 @@ static int __scm_call2(u32 fn_id, struct scm_desc *desc, bool retry)
 		if (retry_count == 33)
 			pr_warn("scm: secure world has been busy for 1 second!\n");
 	} while (ret == SCM_V2_EBUSY && (retry_count++ < SCM_EBUSY_MAX_RETRY));
+
 out:
+	/* Log the Secure Monitor Call response */
+	//dbg_scm_log('<', fn_id, desc);
+
 	if (ret < 0)
 		pr_err("scm_call failed: func id %#llx, ret: %d, syscall returns: %#llx, %#llx, %#llx\n",
 			x0, ret, desc->ret[0], desc->ret[1], desc->ret[2]);
+
+	tzlogger_call (0, ret < 0 ? scm_remap_error(ret) : 0);
 
 	if (arglen > N_REGISTER_ARGS)
 		kfree(desc->extra_arg_buf);
@@ -760,6 +935,12 @@ int scm_call2_atomic(u32 fn_id, struct scm_desc *desc)
 
 	x0 = fn_id | BIT(SMC_ATOMIC_SYSCALL) | scm_version_mask;
 
+	tzlogger_call(0, x0, desc);
+
+	pr_debug("scm_call: func id %#llx, args: %#x, %#llx, %#llx, %#llx, "
+			   "%#llx\n", x0, desc->arginfo, desc->args[0], desc->args[1],
+				desc->args[2], desc->x5);
+
 	if (scm_version == SCM_ARMV8_64)
 		ret = __scm_call_armv8_64(x0, desc->arginfo, desc->args[0],
 					  desc->args[1], desc->args[2],
@@ -774,6 +955,8 @@ int scm_call2_atomic(u32 fn_id, struct scm_desc *desc)
 		pr_err("scm_call failed: func id %#llx, ret: %d, syscall returns: %#llx, %#llx, %#llx\n",
 			x0, ret, desc->ret[0],
 			desc->ret[1], desc->ret[2]);
+
+	tzlogger_call(0, ret < 0 ? scm_remap_error(ret) : ret);
 
 	if (arglen > N_REGISTER_ARGS)
 		kfree(desc->extra_arg_buf);
@@ -807,6 +990,10 @@ int scm_call(u32 svc_id, u32 cmd_id, const void *cmd_buf, size_t cmd_len,
 	int ret;
 	size_t len = SCM_BUF_LEN(cmd_len, resp_len);
 
+	pr_err("--> XXX scm_call from %s:%i ID: %s CMD: %s\n",
+          current->comm, current->pid, id_to_string(cmd_id),
+          id2_to_string(cmd_id));
+
 	if (len == 0 || PAGE_ALIGN(len) < len)
 		return -EINVAL;
 
@@ -814,11 +1001,17 @@ int scm_call(u32 svc_id, u32 cmd_id, const void *cmd_buf, size_t cmd_len,
 	if (!cmd)
 		return -ENOMEM;
 
+	tzlogger_call(0, svc_id, cmd_id, cmd_buf, cmd_len, resp_buf,
+			        resp_len);
+
 	ret = scm_call_common(svc_id, cmd_id, cmd_buf, cmd_len, resp_buf,
 				resp_len, cmd, len);
 	if (unlikely(ret == -EBUSY))
 		ret = _scm_call_retry(svc_id, cmd_id, cmd_buf, cmd_len,
 				      resp_buf, resp_len, cmd, PAGE_ALIGN(len));
+
+	tzlogger_call(0, ret);
+
 	kfree(cmd);
 	return ret;
 }
@@ -847,6 +1040,9 @@ s32 scm_call_atomic1(u32 svc, u32 cmd, u32 arg1)
 	register u32 r1 asm("r1") = (uintptr_t)&context_id;
 	register u32 r2 asm("r2") = arg1;
 
+
+	tzlogger_call(1, svc, cmd, 1, 0, arg1);
+
 	asm volatile(
 		__asmeq("%0", R0_STR)
 		__asmeq("%1", R0_STR)
@@ -859,6 +1055,8 @@ s32 scm_call_atomic1(u32 svc, u32 cmd, u32 arg1)
 		: "=r" (r0)
 		: "r" (r0), "r" (r1), "r" (r2)
 		: "r3");
+
+	tzlogger_call(1, r0);
 	return r0;
 }
 EXPORT_SYMBOL(scm_call_atomic1);
@@ -880,6 +1078,8 @@ s32 scm_call_atomic1_1(u32 svc, u32 cmd, u32 arg1, u32 *ret1)
 	register u32 r1 asm("r1") = (uintptr_t)&context_id;
 	register u32 r2 asm("r2") = arg1;
 
+	tzlogger_call(1, svc, cmd, 1, 1, arg1, ret1);
+
 	asm volatile(
 		__asmeq("%0", R0_STR)
 		__asmeq("%1", R1_STR)
@@ -895,6 +1095,8 @@ s32 scm_call_atomic1_1(u32 svc, u32 cmd, u32 arg1, u32 *ret1)
 		: "r3");
 	if (ret1)
 		*ret1 = r1;
+
+	tzlogger_call(1, r0);
 	return r0;
 }
 EXPORT_SYMBOL(scm_call_atomic1_1);
@@ -917,6 +1119,8 @@ s32 scm_call_atomic2(u32 svc, u32 cmd, u32 arg1, u32 arg2)
 	register u32 r2 asm("r2") = arg1;
 	register u32 r3 asm("r3") = arg2;
 
+	tzlogger_call(1, svc, cmd, 2, 0, arg1, arg2);
+
 	asm volatile(
 		__asmeq("%0", R0_STR)
 		__asmeq("%1", R0_STR)
@@ -929,6 +1133,9 @@ s32 scm_call_atomic2(u32 svc, u32 cmd, u32 arg1, u32 arg2)
 		"smc	#0\n"
 		: "=r" (r0)
 		: "r" (r0), "r" (r1), "r" (r2), "r" (r3));
+
+	tzlogger_call(1, r0);
+
 	return r0;
 }
 EXPORT_SYMBOL(scm_call_atomic2);
@@ -953,6 +1160,8 @@ s32 scm_call_atomic3(u32 svc, u32 cmd, u32 arg1, u32 arg2, u32 arg3)
 	register u32 r3 asm("r3") = arg2;
 	register u32 r4 asm("r4") = arg3;
 
+	tzlogger_call(1, svc, cmd, 3, 0, arg1, arg2, arg3);
+
 	asm volatile(
 		__asmeq("%0", R0_STR)
 		__asmeq("%1", R0_STR)
@@ -966,6 +1175,9 @@ s32 scm_call_atomic3(u32 svc, u32 cmd, u32 arg1, u32 arg2, u32 arg3)
 		"smc	#0\n"
 		: "=r" (r0)
 		: "r" (r0), "r" (r1), "r" (r2), "r" (r3), "r" (r4));
+
+	tzlogger_call(1, r0);
+
 	return r0;
 }
 EXPORT_SYMBOL(scm_call_atomic3);
@@ -981,6 +1193,8 @@ s32 scm_call_atomic4_3(u32 svc, u32 cmd, u32 arg1, u32 arg2,
 	register u32 r3 asm("r3") = arg2;
 	register u32 r4 asm("r4") = arg3;
 	register u32 r5 asm("r5") = arg4;
+
+	tzlogger_call(1, svc, cmd, 4, 2, arg1, arg2, arg3, arg4, ret1, ret2);
 
 	asm volatile(
 		__asmeq("%0", R0_STR)
@@ -1001,6 +1215,8 @@ s32 scm_call_atomic4_3(u32 svc, u32 cmd, u32 arg1, u32 arg2,
 		*ret1 = r1;
 	if (ret2)
 		*ret2 = r2;
+
+	tzlogger_call(1, r0);
 	return r0;
 }
 EXPORT_SYMBOL(scm_call_atomic4_3);
@@ -1034,6 +1250,9 @@ s32 scm_call_atomic5_3(u32 svc, u32 cmd, u32 arg1, u32 arg2,
 	register u32 r5 asm("r5") = arg4;
 	register u32 r6 asm("r6") = arg5;
 
+	tzlogger_call(1, svc, cmd, 5, 3, arg1, arg2, arg3, arg4, arg5, ret1,
+			        ret2, ret3);
+
 	asm volatile(
 		__asmeq("%0", R0_STR)
 		__asmeq("%1", R1_STR)
@@ -1058,6 +1277,8 @@ s32 scm_call_atomic5_3(u32 svc, u32 cmd, u32 arg1, u32 arg2,
 		*ret2 = r2;
 	if (ret3)
 		*ret3 = r3;
+
+	tzlogger_call(1, r0);
 	return r0;
 }
 EXPORT_SYMBOL(scm_call_atomic5_3);
@@ -1071,6 +1292,8 @@ u32 scm_get_version(void)
 
 	if (version != -1)
 		return version;
+
+	tzlogger_call(2);
 
 	mutex_lock(&scm_lock);
 
@@ -1094,6 +1317,7 @@ u32 scm_get_version(void)
 	version = r1;
 	mutex_unlock(&scm_lock);
 
+	tzlogger_call(2, version);
 	return version;
 }
 EXPORT_SYMBOL(scm_get_version);

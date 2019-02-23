@@ -821,6 +821,12 @@ config BOOTLOADER_LOG
 	help
 	  show bootloader log in kernel
 
+config TZ_LOGGER
+	tristate "TEE logger"
+   help
+      Log trustzone calls to inspect and analyze TEE usage.
+      If unsure, say N.
+
 source "drivers/misc/c2port/Kconfig"
 source "drivers/misc/eeprom/Kconfig"
 source "drivers/misc/cb710/Kconfig"
